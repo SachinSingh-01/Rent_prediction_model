@@ -232,30 +232,44 @@ def _training_frame(frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series, pd.Se
         raise ValueError(f"Dataset is missing required columns: {', '.join(sorted(missing))}")
 
     with _diagnostic_stage("feature_engineering"):
-        prepared = frame.copy()
-        prepared["Posted On"] = pd.to_datetime(prepared["Posted On"], errors="raise")
-        prepared["Posted_month"] = prepared["Posted On"].dt.month
-        floor_features = prepared["Floor"].map(_split_floor)
-        prepared["Floor_Number"] = floor_features.map(lambda features: features[0])
-        prepared["Total_Floors"] = floor_features.map(lambda features: features[1])
+        with _diagnostic_stage("feature_engineering_frame_copy"):
+            prepared = frame.copy()
 
-        features = prepared[
-            [
-                "BHK",
-                "Size",
-                "Bathroom",
-                "Floor_Number",
-                "Total_Floors",
-                "Posted_month",
-                "Area Type",
-                "City",
-                "Furnishing Status",
-                "Tenant Preferred",
-                "Point of Contact",
-            ]
-        ].copy()
-        target = prepared["Rent"].astype(float)
-        localities = prepared["Area Locality"].astype(str)
+        with _diagnostic_stage("feature_engineering_posted_on_conversion"):
+            prepared["Posted On"] = pd.to_datetime(prepared["Posted On"], errors="raise")
+
+        with _diagnostic_stage("feature_engineering_month_extraction"):
+            prepared["Posted_month"] = prepared["Posted On"].dt.month
+
+        with _diagnostic_stage("feature_engineering_floor_mapping"):
+            floor_features = prepared["Floor"].map(_split_floor)
+
+        with _diagnostic_stage("feature_engineering_floor_assignments"):
+            prepared["Floor_Number"] = floor_features.map(lambda features: features[0])
+            prepared["Total_Floors"] = floor_features.map(lambda features: features[1])
+
+        with _diagnostic_stage("feature_engineering_feature_selection_copy"):
+            features = prepared[
+                [
+                    "BHK",
+                    "Size",
+                    "Bathroom",
+                    "Floor_Number",
+                    "Total_Floors",
+                    "Posted_month",
+                    "Area Type",
+                    "City",
+                    "Furnishing Status",
+                    "Tenant Preferred",
+                    "Point of Contact",
+                ]
+            ].copy()
+
+        with _diagnostic_stage("feature_engineering_rent_conversion"):
+            target = prepared["Rent"].astype(float)
+
+        with _diagnostic_stage("feature_engineering_locality_conversion"):
+            localities = prepared["Area Locality"].astype(str)
     return features, target, localities
 
 
