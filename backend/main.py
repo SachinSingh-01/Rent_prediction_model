@@ -235,8 +235,11 @@ def _training_frame(frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series, pd.Se
         with _diagnostic_stage("feature_engineering_frame_copy"):
             prepared = frame.copy()
 
-        with _diagnostic_stage("feature_engineering_posted_on_conversion"):
-            prepared["Posted On"] = pd.to_datetime(prepared["Posted On"], errors="raise")
+        with _diagnostic_stage("feature_engineering_posted_on_datetime_conversion"):
+            posted_on = pd.to_datetime(prepared["Posted On"], errors="raise")
+
+        with _diagnostic_stage("feature_engineering_posted_on_assignment"):
+            prepared["Posted On"] = posted_on
 
         with _diagnostic_stage("feature_engineering_month_extraction"):
             prepared["Posted_month"] = prepared["Posted On"].dt.month
